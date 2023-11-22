@@ -25,9 +25,11 @@
     margin-right: .5rem;
 }
 
-#btn {
+#btn,
+#select-difficulty {
     padding: .5rem 2rem;
     border-radius: 15px;
+    margin-right: .5rem;
 }
 
 main {
