@@ -60,3 +60,7 @@ section.main-content article.item-square{
 section.main-content article.item-square.clicked.bg-blue{
     background-color: #006EC6;
 }
+
+.displayNone {
+    display: none;
+}
