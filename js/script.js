@@ -1,58 +1,27 @@
 const mainContentEl = document.querySelector('main section.main-content');
-const playButton = document.querySelector('button#btn');
-const difficultySelectorEl = document.querySelector('select#select-difficulty');
-let numberArray = createArrayOfNumber (1, 100);
 
-playButton.addEventListener('click', function() {
-    //nome Funzione che genera la partita
+const startButtonEl = document.querySelector('button#button-start');
+
+const difficultySelectorEl = document.querySelector('select#select-difficulty');
+
+startButtonEl.addEventListener('click', function(){
     generateNewGame(mainContentEl, difficultySelectorEl);
 });
 
 
-//------ Functions ------
+//------ Funzioni ------
 
-/**
- * Creazione quadrati
- * @returns
- */ 
-function getNewSquare() {
-    const newSquareElement = document.createElement('article');
-    newSquareElement.classList.add('item-square');
-    return newSquareElement;
-}
-
-/** 
- * Genera un numero casuale
- * @param minNumber 
- * @param maxNumber 
- * @returns 
- */
-function getRandomNumber(minNumber, maxNumber) {
-    return Math.floor( Math.random() *(maxNumber - minNumber + 1) + minNumber);
-}
-
-/**
- * Non ripete 2 volte un numero generato
- * @param  start 
- * @param  end 
- * @returns 
- */
-function createArrayOfNumber (start, end) {
-    let myArray = [];
-    for (i = start ; i <= end ; i++) {
-        myArray.push(i);
-    }
-    return myArray;
-}
-
-
-function generateNewGame(wrapperElement, levelSelector) {
+function generateNewGame(wrapperElement, levelSelector){
     wrapperElement.innerHTML = '';
+
+
+    let userScore = 0;
+    let isGameOver = false;
 
     const level = parseInt(levelSelector.value);
     let cellsNo;
 
-    switch (level) {
+    switch (level){
         case 0:
         default:
             cellsNo = 100;
@@ -67,27 +36,106 @@ function generateNewGame(wrapperElement, levelSelector) {
 
     let cellsPerRow = Math.sqrt(cellsNo);
 
+    const bombs = [];
+    while( bombs.length < 16){
+        let randomNumber = getRandomNumber(1, cellsNo)
+        if ( !bombs.includes(randomNumber) ){
+            bombs.push(randomNumber);
+        }
+    }
 
-    for (let i = 1 ; i <= cellsNo ; i++) {
+    console.log(bombs);
+
+    for (let i = 1 ; i <= cellsNo ; i++){
         const currentSquare = getNewSquare();
-    
-        //Creazione numeri random nella caselle
-        let randomIndex = getRandomNumber (0, numberArray.length -1);
-        let randomNumber = numberArray [randomIndex];
-        numberArray.slice(1, randomIndex);
-        currentSquare.innerHTML += `<span> ${randomIndex} </span>`; //Stampa il numero cas. nella casella
-        
+        const squareContent = i;
+
         const cellSize = `calc(100% / ${cellsPerRow})`;
         currentSquare.style.width = cellSize;
         currentSquare.style.height= cellSize;
 
-        //al click dell'utente
+        if ( bombs.includes(squareContent) ){
+            currentSquare.classList.add('bg-red');
+        }
+
         currentSquare.addEventListener('click', function(){
-        currentSquare.classList.toggle('clicked');
-        currentSquare.classList.add('bg-blue');
-        console.log('hai selezionato la casella n.', randomIndex);
-        });
-        
-        mainContentEl.appendChild(currentSquare);
-    };
+            if (!isGameOver){
+                currentSquare.classList.add('clicked');
+
+                if ( !bombs.includes(squareContent) ){
+                    const bombChecker = [
+                        squareContent - 1,
+                        squareContent + 1,
+                        squareContent - cellsPerRow -1,
+                        squareContent - cellsPerRow,
+                        squareContent - cellsPerRow + 1,
+                        squareContent + cellsPerRow - 1,
+                        squareContent + cellsPerRow ,
+                        squareContent + cellsPerRow + 1
+                    ];
+
+                    let closeBombs = 0;
+
+                    for (let index = 0; index < bombChecker.length; index++) {
+                        if (bombs.includes(bombChecker[index])){
+                            closeBombs++;
+                        }
+                    }
+
+                    currentSquare.innerHTML += `<span> ${closeBombs} </span>`;
+
+                    currentSquare.classList.add('bg-blue');
+                    console.log(++userScore);
+                    updateCurrentScore(`Your score is ${userScore}`);
+                } else {
+                    isGameOver = true;
+                    currentSquare.innerHTML = `<span> <i class="fa-solid fa-bomb fa-beat"></i> </span>`;
+                    console.log('BOOOM!');
+                    updateCurrentScore(`BOOM! Game over: your high score is ${userScore}`);
+                    
+                    showBombCells();
+                }
+            }
+        }, { once: true });
+
+        wrapperElement.appendChild(currentSquare);
+    }
+}
+
+
+/**
+ * Funzione che crea i quadrati
+ *
+ * @returns
+ */
+function getNewSquare(){
+    const newSquareElement = document.createElement('article');
+    newSquareElement.classList.add('item-square');
+    return newSquareElement;
+}
+
+/**
+ * Funzione che genera un numero casuale (min e max incluso)
+ *
+ * @param minNumber 
+ * @param maxNumber 
+ * @returns 
+ */
+function getRandomNumber(minNumber, maxNumber){
+    return Math.floor( Math.random() *(maxNumber - minNumber + 1) + minNumber);
+}
+
+function updateCurrentScore(scoreToUpdate){
+    const scoreboardEl = document.getElementById('scoreboard');
+    scoreboardEl.innerText = scoreToUpdate;
+}
+
+function showBombCells(){
+    const bombElements = document.querySelectorAll('article.bg-red');
+    for (let index = 0; index < bombElements.length; index++) {
+        const bombElement = bombElements[index];
+        bombElement.classList.add('clicked');
+        bombElement.innerHTML = `<span> <i class="fa-solid fa-bomb fa-beat"></i> </span>`;
+
+    }
 }
